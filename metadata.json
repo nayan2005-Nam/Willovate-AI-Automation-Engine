@@ -1,0 +1,6 @@
+{
+  "name": "Willovate AI RPA Studio",
+  "description": "Natural language to web automation engine with UiPath-style bot execution, multilingual Hinglish support, entity extraction, screenshot understanding, self-healing, risk guardrails, and model evaluation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
