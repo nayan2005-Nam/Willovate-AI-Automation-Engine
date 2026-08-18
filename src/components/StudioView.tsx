@@ -23,6 +23,7 @@ import { WorkflowResult, WorkflowStep, CustomerRecord, ProductRecord, ReportReco
 import { PRESET_COMMANDS } from '../data/initialData';
 import { TargetWebApp } from './TargetWebApp';
 import { UiPathBotRunner } from './UiPathBotRunner';
+import { parseInstructionLocally } from '../utils/localRpaParser';
 
 interface StudioViewProps {
   customers: CustomerRecord[];
@@ -87,19 +88,31 @@ export const StudioView: React.FC<StudioViewProps> = ({
   // Execution Timer Ref
   const executionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Parse Natural Language Instruction
+  // Parse Natural Language Instruction with resilient fallback
   const handleParseInstruction = async (textToParse?: string, answers?: Record<string, string>) => {
     const query = textToParse !== undefined ? textToParse : instruction;
     if (!query.trim()) return;
 
     setIsParsing(true);
     try {
-      const res = await fetch('/api/rpa/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ instruction: query, clarificationAnswers: answers || clarificationAnswers }),
-      });
-      const data: WorkflowResult = await res.json();
+      let data: WorkflowResult | null = null;
+      try {
+        const res = await fetch('/api/rpa/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instruction: query, clarificationAnswers: answers || clarificationAnswers }),
+        });
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (networkErr) {
+        console.warn('Backend API unavailable, using local client parsing engine:', networkErr);
+      }
+
+      if (!data || !data.steps) {
+        data = parseInstructionLocally(query, answers || clarificationAnswers);
+      }
+
       setWorkflow(data);
 
       // Reset bot execution index
@@ -118,6 +131,8 @@ export const StudioView: React.FC<StudioViewProps> = ({
       }
     } catch (err) {
       console.error('Error parsing instruction:', err);
+      const localData = parseInstructionLocally(query, answers || clarificationAnswers);
+      setWorkflow(localData);
     } finally {
       setIsParsing(false);
     }
@@ -279,12 +294,24 @@ export const StudioView: React.FC<StudioViewProps> = ({
   const handleParseAndAutoRun = async (text: string) => {
     setIsParsing(true);
     try {
-      const res = await fetch('/api/rpa/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ instruction: text }),
-      });
-      const data: WorkflowResult = await res.json();
+      let data: WorkflowResult | null = null;
+      try {
+        const res = await fetch('/api/rpa/parse', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instruction: text }),
+        });
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch (networkErr) {
+        console.warn('Backend API unavailable, executing via client engine:', networkErr);
+      }
+
+      if (!data || !data.steps || data.steps.length === 0) {
+        data = parseInstructionLocally(text);
+      }
+
       setWorkflow(data);
       setCurrentStepIndex(-1);
       setActiveSelector(undefined);
@@ -297,11 +324,22 @@ export const StudioView: React.FC<StudioViewProps> = ({
         setExecutionLogs([]);
         addLog(`🚀 Auto-launching UiPath Bot Runner on ${data.steps.length} activities...`, 'info');
         setTimeout(() => {
-          executeStepWithWorkflow(data, 0);
+          executeStepWithWorkflow(data!, 0);
         }, 350);
       }
     } catch (err) {
       console.error('Error auto-running instruction:', err);
+      const fallbackData = parseInstructionLocally(text);
+      setWorkflow(fallbackData);
+      if (fallbackData.steps && fallbackData.steps.length > 0) {
+        setIsRunningBot(true);
+        setIsPaused(false);
+        setExecutionLogs([]);
+        addLog(`🚀 Auto-launching UiPath Bot Runner on ${fallbackData.steps.length} activities...`, 'info');
+        setTimeout(() => {
+          executeStepWithWorkflow(fallbackData, 0);
+        }, 350);
+      }
     } finally {
       setIsParsing(false);
     }
