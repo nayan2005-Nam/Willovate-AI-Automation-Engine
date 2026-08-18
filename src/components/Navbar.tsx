@@ -1,11 +1,10 @@
 import React from 'react';
-import { Bot, Sparkles, Cpu, Eye, Database, BarChart3, BookOpen, ShieldCheck, Play, FileText, LogOut, User } from 'lucide-react';
+import { Bot, Sparkles, Cpu, Eye, Database, BarChart3, BookOpen, ShieldCheck, Play, LogOut, User } from 'lucide-react';
 
 interface NavbarProps {
   activeTab: 'studio' | 'vision' | 'dataset' | 'evaluation' | 'architecture';
   setActiveTab: (tab: 'studio' | 'vision' | 'dataset' | 'evaluation' | 'architecture') => void;
   onQuickRunFinalDemo: () => void;
-  onOpenScriptPdf: () => void;
   isRunningBot: boolean;
   currentUser?: { name: string; email: string; role: string } | null;
   onLogout?: () => void;
@@ -15,7 +14,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onQuickRunFinalDemo,
-  onOpenScriptPdf,
   isRunningBot,
   currentUser,
   onLogout,
@@ -113,17 +111,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          <button
-            id="btn-open-script-pdf"
-            onClick={onOpenScriptPdf}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-xs transition-all active:scale-95"
-            title="Open printable 15-minute evaluation video script"
-          >
-            <FileText className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="hidden sm:inline">Evaluation Script PDF</span>
-            <span className="sm:hidden">Script</span>
-          </button>
-
           <button
             id="btn-final-demo-header"
             onClick={onQuickRunFinalDemo}

@@ -5,7 +5,6 @@ import { VisionInspector } from './components/VisionInspector';
 import { DatasetStudio } from './components/DatasetStudio';
 import { ModelEvaluation } from './components/ModelEvaluation';
 import { ArchitectureSpec } from './components/ArchitectureSpec';
-import { EvaluationScriptModal } from './components/EvaluationScriptModal';
 import { LoginPage } from './components/LoginPage';
 import { INITIAL_CUSTOMERS, INITIAL_PRODUCTS, INITIAL_REPORTS } from './data/initialData';
 import { CustomerRecord, ProductRecord, ReportRecord, DatasetItem, VisionDetection } from './types/rpa';
@@ -30,7 +29,6 @@ export default function App() {
   const [customers, setCustomers] = useState<CustomerRecord[]>(INITIAL_CUSTOMERS);
   const [products, setProducts] = useState<ProductRecord[]>(INITIAL_PRODUCTS);
   const [reports, setReports] = useState<ReportRecord[]>(INITIAL_REPORTS);
-  const [isScriptModalOpen, setIsScriptModalOpen] = useState(false);
   const [studioInstruction, setStudioInstruction] = useState(
     'Open the CRM, add Pankaj Koche as a customer with phone number 9876543210, save the record and verify that the customer appears in the table.'
   );
@@ -94,16 +92,9 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onQuickRunFinalDemo={handleQuickRunFinalDemo}
-        onOpenScriptPdf={() => setIsScriptModalOpen(true)}
         isRunningBot={isRunningBot}
         currentUser={currentUser}
         onLogout={handleLogout}
-      />
-
-      {/* Evaluation Script Printable Modal */}
-      <EvaluationScriptModal
-        isOpen={isScriptModalOpen}
-        onClose={() => setIsScriptModalOpen(false)}
       />
 
       {/* Main View Area */}
