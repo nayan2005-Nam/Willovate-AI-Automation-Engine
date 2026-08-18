@@ -2,7 +2,7 @@
 
 Local app preview: http://localhost:3000
 
-GitHub repository: https://github.com/nayan2005-Nam/Ai-automation-engine
+GitHub repository: https://github.com/nayan2005-Nam/Willovate-Ai-Automation-Engine
 
 > Google AI Studio deployment note: this project is ready to be adapted for Vercel deployment. The app is structured for a modern web deployment flow and can be configured to run with environment variables in Vercel instead of the AI Studio environment.
 
