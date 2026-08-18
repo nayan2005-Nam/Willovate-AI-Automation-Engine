@@ -1,8 +1,10 @@
 # Willovate AI Automation Engine
 
+Live Vercel App: https://willovate-ai-automation-engine.vercel.app
+
 Local app preview: http://localhost:3000
 
-GitHub repository: https://github.com/nayan2005-Nam/Willovate-Ai-Automation-Engine
+GitHub repository: https://github.com/nayan2005-Nam/Ai-automation-engine
 
 > Google AI Studio deployment note: this project is ready to be adapted for Vercel deployment. The app is structured for a modern web deployment flow and can be configured to run with environment variables in Vercel instead of the AI Studio environment.
 
