@@ -1,23 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { StudioView } from './components/StudioView';
 import { VisionInspector } from './components/VisionInspector';
 import { DatasetStudio } from './components/DatasetStudio';
 import { ModelEvaluation } from './components/ModelEvaluation';
 import { ArchitectureSpec } from './components/ArchitectureSpec';
+import { EvaluationScriptModal } from './components/EvaluationScriptModal';
+import { LoginPage } from './components/LoginPage';
 import { INITIAL_CUSTOMERS, INITIAL_PRODUCTS, INITIAL_REPORTS } from './data/initialData';
 import { CustomerRecord, ProductRecord, ReportRecord, DatasetItem, VisionDetection } from './types/rpa';
 
+interface UserProfile {
+  name: string;
+  email: string;
+  role: string;
+}
+
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const saved = localStorage.getItem('willovate_auth_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [activeTab, setActiveTab] = useState<'studio' | 'vision' | 'dataset' | 'evaluation' | 'architecture'>('studio');
   const [customers, setCustomers] = useState<CustomerRecord[]>(INITIAL_CUSTOMERS);
   const [products, setProducts] = useState<ProductRecord[]>(INITIAL_PRODUCTS);
   const [reports, setReports] = useState<ReportRecord[]>(INITIAL_REPORTS);
+  const [isScriptModalOpen, setIsScriptModalOpen] = useState(false);
   const [studioInstruction, setStudioInstruction] = useState(
     'Open the CRM, add Pankaj Koche as a customer with phone number 9876543210, save the record and verify that the customer appears in the table.'
   );
   const [isRunningBot, setIsRunningBot] = useState(false);
   const [autoRunTrigger, setAutoRunTrigger] = useState(1);
+
+  const handleLoginSuccess = (user: UserProfile) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('willovate_auth_user', JSON.stringify(user));
+    } catch (e) {
+      console.warn('LocalStorage unavailable', e);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('willovate_auth_user');
+    } catch (e) {
+      console.warn('LocalStorage unavailable', e);
+    }
+  };
 
   // Quick Run Final Demo
   const handleQuickRunFinalDemo = () => {
@@ -41,6 +77,16 @@ export default function App() {
     setActiveTab('studio');
   };
 
+  // Render Login Page if not authenticated
+  if (!currentUser) {
+    return (
+      <LoginPage
+        onLoginSuccess={handleLoginSuccess}
+        onSkip={() => handleLoginSuccess({ name: 'Guest Developer', email: 'guest@willovate.com', role: 'Automation Engineer' })}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
       {/* Top Header Navbar */}
@@ -48,7 +94,16 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onQuickRunFinalDemo={handleQuickRunFinalDemo}
+        onOpenScriptPdf={() => setIsScriptModalOpen(true)}
         isRunningBot={isRunningBot}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+
+      {/* Evaluation Script Printable Modal */}
+      <EvaluationScriptModal
+        isOpen={isScriptModalOpen}
+        onClose={() => setIsScriptModalOpen(false)}
       />
 
       {/* Main View Area */}
