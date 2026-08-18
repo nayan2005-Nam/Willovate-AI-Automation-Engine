@@ -6,7 +6,7 @@ Local app preview: http://localhost:3000
 
 GitHub repository: https://github.com/nayan2005-Nam/Ai-automation-engine
 
-> Google AI Studio deployment note: this project is ready to be adapted for Vercel deployment. The app is structured for a modern web deployment flow and can be configured to run with environment variables in Vercel instead of the AI Studio environment.
+>  this project is ready to be adapted for Vercel deployment. The app is structured for a modern web deployment flow and can be configured to run with environment variables in Vercel instead of the AI Studio environment.
 
 This project is designed for creating, testing, and evaluating AI-powered automation workflows across CRM, product, and business-process scenarios. It combines a React frontend, a lightweight Express backend, and Gemini-powered workflow generation to turn natural-language instructions into structured automation steps.
 
