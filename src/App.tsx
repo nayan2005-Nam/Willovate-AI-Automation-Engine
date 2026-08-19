@@ -33,7 +33,7 @@ export default function App() {
     'Open the CRM, add Pankaj Koche as a customer with phone number 9876543210, save the record and verify that the customer appears in the table.'
   );
   const [isRunningBot, setIsRunningBot] = useState(false);
-  const [autoRunTrigger, setAutoRunTrigger] = useState(1);
+  const [autoRunTrigger, setAutoRunTrigger] = useState(0);
 
   const handleLoginSuccess = (user: UserProfile) => {
     setCurrentUser(user);

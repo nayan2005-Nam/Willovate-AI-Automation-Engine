@@ -152,17 +152,10 @@ export const StudioView: React.FC<StudioViewProps> = ({
     }
   }, [initialInstruction]);
 
-  // Initial parse or auto-run on load
+  // Initial compile on load
   useEffect(() => {
-    if (autoRunTrigger && autoRunTrigger > 0) {
-      const demoText =
-        'Open the CRM, add Pankaj Koche as a customer with phone number 9876543210, save the record and verify that the customer appears in the table.';
-      setInstruction(demoText);
-      handleParseAndAutoRun(demoText);
-    } else {
-      handleParseInstruction();
-    }
-  }, [autoRunTrigger]);
+    handleParseInstruction();
+  }, []);
 
   // Update instruction when preset is clicked
   const handleSelectPreset = (presetText: string) => {
@@ -355,15 +348,13 @@ export const StudioView: React.FC<StudioViewProps> = ({
     }
   };
 
-  // Initial parse or auto-run on load / trigger
+  // Run demo only when explicitly triggered by header button
   useEffect(() => {
     if (autoRunTrigger && autoRunTrigger > 0) {
       const demoText =
         'Open the CRM, add Pankaj Koche as a customer with phone number 9876543210, save the record and verify that the customer appears in the table.';
       setInstruction(demoText);
       handleParseAndAutoRun(demoText);
-    } else {
-      handleParseInstruction();
     }
   }, [autoRunTrigger]);
 
