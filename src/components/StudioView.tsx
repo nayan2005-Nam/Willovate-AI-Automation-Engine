@@ -623,10 +623,13 @@ export const StudioView: React.FC<StudioViewProps> = ({
                     activeInspectorTab === 'risk'
                       ? 'bg-white text-slate-900 shadow-xs border border-slate-200 font-semibold'
                       : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                  } ${workflow?.requiresConfirmation && !highRiskConfirmed ? 'animate-pulse text-rose-600 font-bold' : ''}`}
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
                   <span>Risk</span>
+                  {workflow?.requiresConfirmation && (
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping inline-block" />
+                  )}
                 </button>
 
                 <button
@@ -663,6 +666,46 @@ export const StudioView: React.FC<StudioViewProps> = ({
                 )}
               </div>
             </div>
+
+            {/* High-Risk Inline Guardrail Warning */}
+            {workflow && workflow.requiresConfirmation && (
+              <div
+                className={`p-3 rounded-lg border flex items-center justify-between text-xs transition-all ${
+                  highRiskConfirmed
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                    : 'bg-rose-50 border-rose-300 text-rose-900 shadow-xs'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck
+                    className={`w-4 h-4 shrink-0 ${
+                      highRiskConfirmed ? 'text-emerald-600' : 'text-rose-600 animate-bounce'
+                    }`}
+                  />
+                  <div>
+                    <span className="font-bold">
+                      {highRiskConfirmed ? 'Security Override Authorized' : 'High Risk Guardrail Triggered'}
+                    </span>
+                    <p className="text-[11px] text-slate-600 leading-tight">
+                      {highRiskConfirmed
+                        ? 'Operator authorized this destructive deletion.'
+                        : 'Requires operator confirmation before execution.'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setHighRiskConfirmed(!highRiskConfirmed)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-xs shrink-0 ${
+                    highRiskConfirmed
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse'
+                  }`}
+                >
+                  {highRiskConfirmed ? '✓ Authorized' : 'Authorize Run'}
+                </button>
+              </div>
+            )}
 
             {/* TAB 1: ACTIVITIES SEQUENCE */}
             {activeInspectorTab === 'activities' && (

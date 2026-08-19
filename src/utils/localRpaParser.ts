@@ -12,7 +12,146 @@ export function parseInstructionLocally(
     lang = 'Hindi';
   }
 
-  // 1. Final Demo Command or Add Customer / Employee / Person Match
+  // 1. High Risk Delete (Prioritized so "delete Rahul Sharma" is classified as DELETE_RECORDS, not CREATE_CUSTOMER)
+  if (text.includes('delete') || text.includes('hatao') || text.includes('remove') || text.includes('drop') || text.includes('destroy')) {
+    const steps: WorkflowStep[] = [
+      {
+        id: 'step-1',
+        stepNumber: 1,
+        action: 'OPEN_PAGE',
+        target: 'customers',
+        selector: '[data-testid="nav-customers"]',
+        description: 'Navigate to Customers page in CRM',
+      },
+      {
+        id: 'step-2',
+        stepNumber: 2,
+        action: 'CLICK',
+        target: 'confirm-delete-button',
+        selector: '[data-testid="btn-modal-confirm-delete"]',
+        description: 'Permanently remove customer record from CRM database',
+      },
+    ];
+
+    const nameMatch = instruction.match(/(?:delete|hatao|remove)\s+([A-Za-z\s]+?)(?:\s+from|\s+ko|\s+in|\s+the|$)/i);
+    const targetCustomer = nameMatch ? nameMatch[1].trim() : 'Rahul Sharma';
+
+    return {
+      instruction,
+      intent: 'DELETE_RECORDS',
+      intentDescription: `Permanently delete customer record "${targetCustomer}" from database`,
+      confidence: 0.98,
+      languageDetected: lang,
+      entities: { targetCustomer },
+      entityList: [
+        { key: 'target_customer', label: 'Target Record', value: targetCustomer, confidence: 0.99 },
+      ],
+      missingFields: [],
+      riskLevel: 'CRITICAL',
+      riskReason: 'Destructive deletion cannot be undone. Requires explicit human operator security override before execution.',
+      requiresConfirmation: true,
+      steps,
+      rawJson: JSON.stringify(
+        {
+          steps: steps.map(s => ({
+            action: s.action,
+            target: s.target,
+            ...(s.value ? { value: s.value } : {}),
+          })),
+        },
+        null,
+        2
+      ),
+      isValid: true,
+      executionTimeEstimateSec: 2.0,
+    };
+  }
+
+  // 2. Multi-Step Report Download & Email
+  if (text.includes('download') || text.includes('report') || text.includes('email') || text.includes('sales report') || text.includes('manager')) {
+    const steps: WorkflowStep[] = [
+      {
+        id: 'step-1',
+        stepNumber: 1,
+        action: 'OPEN_PAGE',
+        target: 'reports',
+        selector: '[data-testid="nav-reports"]',
+        description: 'Navigate to Analytics & Reports portal',
+      },
+      {
+        id: 'step-2',
+        stepNumber: 2,
+        action: 'DOWNLOAD_FILE',
+        target: 'btn-download-excel',
+        selector: '[data-testid="btn-download-excel"]',
+        value: 'Daily_Sales_Report.xlsx',
+        description: 'Download daily transactions as Excel spreadsheet',
+      },
+      {
+        id: 'step-3',
+        stepNumber: 3,
+        action: 'CLICK',
+        target: 'open-email-modal',
+        selector: '[data-testid="btn-open-email-dispatch"]',
+        description: 'Open dispatch email modal window',
+      },
+      {
+        id: 'step-4',
+        stepNumber: 4,
+        action: 'ENTER_TEXT',
+        target: 'recipient-email',
+        selector: '[data-testid="input-email-recipient"]',
+        value: 'manager@willovate.com',
+        description: 'Set recipient email to manager@willovate.com',
+      },
+      {
+        id: 'step-5',
+        stepNumber: 5,
+        action: 'CLICK',
+        target: 'send-email',
+        selector: '[data-testid="btn-send-report-email"]',
+        description: 'Dispatch report attachment to management',
+      },
+    ];
+
+    return {
+      instruction,
+      intent: 'DOWNLOAD_AND_EMAIL_REPORT',
+      intentDescription: 'Download business report and dispatch via email to management',
+      confidence: 0.98,
+      languageDetected: lang,
+      entities: {
+        fileName: 'Daily_Sales_Report.xlsx',
+        email: 'manager@willovate.com',
+        reportType: 'Excel',
+      },
+      entityList: [
+        { key: 'file_name', label: 'File Name', value: 'Daily_Sales_Report.xlsx', confidence: 0.99 },
+        { key: 'email', label: 'Recipient Email', value: 'manager@willovate.com', confidence: 0.98 },
+        { key: 'format', label: 'Export Format', value: 'Excel (.xlsx)', confidence: 0.96 },
+      ],
+      missingFields: [],
+      riskLevel: 'LOW',
+      riskReason: 'Exporting reports and emailing authorized management.',
+      requiresConfirmation: false,
+      steps,
+      rawJson: JSON.stringify(
+        {
+          steps: steps.map(s => ({
+            action: s.action,
+            target: s.target,
+            ...(s.value ? { value: s.value } : {}),
+          })),
+        },
+        null,
+        2
+      ),
+      isValid: true,
+      executionTimeEstimateSec: 4.5,
+    };
+  }
+
+  // 3. Final Demo Command or Add Customer / Employee / Person Match
   if (
     text.includes('pankaj') ||
     text.includes('rahul') ||
@@ -246,139 +385,6 @@ export function parseInstructionLocally(
       ),
       isValid: true,
       executionTimeEstimateSec: 3.2,
-    };
-  }
-
-  // 3. Multi-Step Report Download & Email
-  if (text.includes('download') || text.includes('report') || text.includes('email') || text.includes('manager')) {
-    const steps: WorkflowStep[] = [
-      {
-        id: 'step-1',
-        stepNumber: 1,
-        action: 'OPEN_PAGE',
-        target: 'reports',
-        selector: '[data-testid="nav-reports"]',
-        description: 'Navigate to Analytics & Reports page',
-      },
-      {
-        id: 'step-2',
-        stepNumber: 2,
-        action: 'DOWNLOAD_FILE',
-        target: 'btn-download-excel',
-        selector: '[data-testid="btn-download-excel"]',
-        value: 'Daily_Sales_Report.xlsx',
-        description: 'Download daily revenue report as Excel spreadsheet',
-      },
-      {
-        id: 'step-3',
-        stepNumber: 3,
-        action: 'CLICK',
-        target: 'open-email-modal',
-        selector: '[data-testid="btn-open-email-dispatch"]',
-        description: 'Open dispatch email modal',
-      },
-      {
-        id: 'step-4',
-        stepNumber: 4,
-        action: 'ENTER_TEXT',
-        target: 'recipient-email',
-        selector: '[data-testid="input-email-recipient"]',
-        value: 'manager@willovate.com',
-        description: 'Set recipient email to manager@willovate.com',
-      },
-      {
-        id: 'step-5',
-        stepNumber: 5,
-        action: 'CLICK',
-        target: 'send-email',
-        selector: '[data-testid="btn-send-report-email"]',
-        description: 'Dispatch report email attachment to manager',
-      },
-    ];
-
-    return {
-      instruction,
-      intent: 'DOWNLOAD_AND_EMAIL_REPORT',
-      intentDescription: 'Download business report and dispatch via email to management',
-      confidence: 0.96,
-      languageDetected: lang,
-      entities: {
-        fileName: 'Daily_Sales_Report.xlsx',
-        email: 'manager@willovate.com',
-        reportType: 'Excel',
-      },
-      entityList: [
-        { key: 'file_name', label: 'File Name', value: 'Daily_Sales_Report.xlsx', confidence: 0.99 },
-        { key: 'email', label: 'Recipient Email', value: 'manager@willovate.com', confidence: 0.97 },
-      ],
-      missingFields: [],
-      riskLevel: 'LOW',
-      riskReason: 'Exporting reports and emailing authorized management.',
-      requiresConfirmation: false,
-      steps,
-      rawJson: JSON.stringify(
-        {
-          steps: steps.map(s => ({
-            action: s.action,
-            target: s.target,
-            ...(s.value ? { value: s.value } : {}),
-          })),
-        },
-        null,
-        2
-      ),
-      isValid: true,
-      executionTimeEstimateSec: 4.5,
-    };
-  }
-
-  // 4. High Risk Delete
-  if (text.includes('delete') || text.includes('hatao') || text.includes('remove')) {
-    const steps: WorkflowStep[] = [
-      {
-        id: 'step-1',
-        stepNumber: 1,
-        action: 'OPEN_PAGE',
-        target: 'customers',
-        selector: '[data-testid="nav-customers"]',
-        description: 'Navigate to Customers page',
-      },
-      {
-        id: 'step-2',
-        stepNumber: 2,
-        action: 'CLICK',
-        target: 'confirm-delete-button',
-        selector: '[data-testid="btn-modal-confirm-delete"]',
-        description: 'Delete customer record from CRM database',
-      },
-    ];
-
-    return {
-      instruction,
-      intent: 'DELETE_RECORDS',
-      intentDescription: 'Permanently remove customer records',
-      confidence: 0.95,
-      languageDetected: lang,
-      entities: {},
-      entityList: [],
-      missingFields: [],
-      riskLevel: 'CRITICAL',
-      riskReason: 'Destructive deletion cannot be undone. Requires explicit human operator authorization.',
-      requiresConfirmation: true,
-      steps,
-      rawJson: JSON.stringify(
-        {
-          steps: steps.map(s => ({
-            action: s.action,
-            target: s.target,
-            ...(s.value ? { value: s.value } : {}),
-          })),
-        },
-        null,
-        2
-      ),
-      isValid: true,
-      executionTimeEstimateSec: 2.0,
     };
   }
 
