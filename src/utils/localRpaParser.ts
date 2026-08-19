@@ -12,10 +12,12 @@ export function parseInstructionLocally(
     lang = 'Hindi';
   }
 
-  // 1. Final Demo Command or Add Customer Match
+  // 1. Final Demo Command or Add Customer / Employee / Person Match
   if (
     text.includes('pankaj') ||
-    (text.includes('customer') && (text.includes('add') || text.includes('create') || text.includes('karo') || text.includes('new')))
+    text.includes('rahul') ||
+    ((text.includes('customer') || text.includes('employee') || text.includes('user') || text.includes('person') || text.includes('banda') || text.includes('lead')) &&
+     (text.includes('add') || text.includes('create') || text.includes('karo') || text.includes('kar') || text.includes('new') || text.includes('insert')))
   ) {
     let customerName = clarificationAnswers?.customer_name?.trim() || '';
     let phone = clarificationAnswers?.phone_number?.trim() || '';
@@ -23,25 +25,23 @@ export function parseInstructionLocally(
     if (!customerName) {
       if (text.includes('pankaj koche') || text.includes('pankaj')) {
         customerName = 'Pankaj Koche';
-      } else if (text.includes('rahul')) {
+      } else if (text.includes('rahul sharma') || text.includes('rahul')) {
         customerName = 'Rahul Sharma';
       } else {
         const nameMatch =
-          instruction.match(/(?:add|naam ka|naam|customer)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i) ||
-          instruction.match(/(?:add|create)\s+([A-Za-z\s]+?)(?:\s+with|\s+as|\s+and|\s+having|\s+phone)/i);
+          instruction.match(/([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:naam|name|ko|ka)/i) ||
+          instruction.match(/(?:add|naam ka|naam|customer|employee)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/i) ||
+          instruction.match(/(?:add|create)\s+([A-Za-z\s]+?)(?:\s+with|\s+as|\s+and|\s+having|\s+phone|\s+jiska)/i);
         if (nameMatch) customerName = nameMatch[1].trim();
       }
     }
 
     if (!phone) {
-      if (text.includes('9876543210')) {
-        phone = '9876543210';
-      } else {
-        const phoneMatch =
-          instruction.match(/(?:\+?91)?[6-9]\d{9}/) ||
-          instruction.match(/(?:phone|mobile|number|no)\s*(?:is|number|no|:)?\s*(\d{10})/i);
-        if (phoneMatch) phone = phoneMatch[1] || phoneMatch[0];
-      }
+      const phoneMatch =
+        instruction.match(/(?:\+?91)?[6-9]\d{9}/) ||
+        instruction.match(/(?:phone|mobile|number|no)\s*(?:is|number|no|:)?\s*(\d{10})/i) ||
+        instruction.match(/\b\d{10}\b/);
+      if (phoneMatch) phone = phoneMatch[1] || phoneMatch[0];
     }
 
     // Only prompt for missing if it's a bare command without name or phone

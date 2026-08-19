@@ -23,6 +23,7 @@ import { WorkflowResult, WorkflowStep, CustomerRecord, ProductRecord, ReportReco
 import { PRESET_COMMANDS } from '../data/initialData';
 import { TargetWebApp } from './TargetWebApp';
 import { UiPathBotRunner } from './UiPathBotRunner';
+import { ExternalRunnerModal } from './ExternalRunnerModal';
 import { parseInstructionLocally } from '../utils/localRpaParser';
 
 interface StudioViewProps {
@@ -63,6 +64,7 @@ export const StudioView: React.FC<StudioViewProps> = ({
   const [activeInspectorTab, setActiveInspectorTab] = useState<'activities' | 'entities' | 'risk' | 'json'>('activities');
   const [copiedJson, setCopiedJson] = useState(false);
   const [highRiskConfirmed, setHighRiskConfirmed] = useState(false);
+  const [isExternalModalOpen, setIsExternalModalOpen] = useState(false);
 
   // Target Web App State
   const [activeAppView, setActiveAppView] = useState<'customers' | 'products' | 'reports'>('customers');
@@ -97,16 +99,20 @@ export const StudioView: React.FC<StudioViewProps> = ({
     try {
       let data: WorkflowResult | null = null;
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
         const res = await fetch('/api/rpa/parse', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ instruction: query, clarificationAnswers: answers || clarificationAnswers }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         if (res.ok) {
           data = await res.json();
         }
       } catch (networkErr) {
-        console.warn('Backend API unavailable, using local client parsing engine:', networkErr);
+        // Fast instant fallback on Vercel static preview
       }
 
       if (!data || !data.steps) {
@@ -296,16 +302,20 @@ export const StudioView: React.FC<StudioViewProps> = ({
     try {
       let data: WorkflowResult | null = null;
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
         const res = await fetch('/api/rpa/parse', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ instruction: text }),
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         if (res.ok) {
           data = await res.json();
         }
       } catch (networkErr) {
-        console.warn('Backend API unavailable, executing via client engine:', networkErr);
+        // Fast instant fallback
       }
 
       if (!data || !data.steps || data.steps.length === 0) {
@@ -642,11 +652,25 @@ export const StudioView: React.FC<StudioViewProps> = ({
                 </button>
               </div>
 
-              {workflow && (
-                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  {workflow.languageDetected}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {workflow && (
+                  <button
+                    id="btn-run-external-web"
+                    onClick={() => setIsExternalModalOpen(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-2xs transition-all active:scale-95"
+                    title="Export or execute this automation on Salesforce, HubSpot, or any external website"
+                  >
+                    <span>Execute on Any Web App</span>
+                    <span className="text-[10px]">🌐</span>
+                  </button>
+                )}
+
+                {workflow && (
+                  <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    {workflow.languageDetected}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* TAB 1: ACTIVITIES SEQUENCE */}
@@ -879,6 +903,13 @@ export const StudioView: React.FC<StudioViewProps> = ({
           />
         </div>
       </div>
+
+      {/* External Web Application Execution Modal */}
+      <ExternalRunnerModal
+        workflow={workflow}
+        isOpen={isExternalModalOpen}
+        onClose={() => setIsExternalModalOpen(false)}
+      />
     </div>
   );
 };
